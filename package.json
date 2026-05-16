@@ -4,9 +4,11 @@
   "description": "IPL Live Score - Interactive fan engagement platform",
   "private": true,
   "scripts": {
+    "start": "cd backend && npm start",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "cd backend && npm start",
     "frontend": "cd frontend && npm run dev",
+    "postinstall": "cd backend && npm install",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm run build"
   },
