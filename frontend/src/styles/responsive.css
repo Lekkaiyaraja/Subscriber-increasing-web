@@ -1,0 +1,236 @@
+/* Global Mobile Responsive Styles for IPL Live Score */
+
+/* Prevent overflow on all screens */
+html, body, #root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Tablet screens (768px and below) */
+@media (max-width: 768px) {
+  html, body, #root {
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Responsive grid classes */
+  .responsive-grid-main {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: clamp(16px, 4vw, 24px) !important;
+  }
+  
+  .responsive-grid-cards {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Responsive sections */
+  section {
+    padding: clamp(12px, 4vw, 20px) !important;
+  }
+  
+  /* Form inputs full width */
+  input[type="text"],
+  input[type="file"],
+  textarea,
+  select {
+    width: 100% !important;
+    padding: clamp(10px, 3vw, 14px) !important;
+    font-size: clamp(12px, 3vw, 14px) !important;
+  }
+  
+  /* Buttons full width and touch-friendly */
+  button {
+    width: 100% !important;
+    padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px) !important;
+    font-size: clamp(12px, 2.5vw, 14px) !important;
+    min-height: 44px !important;
+  }
+  
+  /* Player cards responsive */
+  .player-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Images responsive */
+  img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  
+  /* Header responsive */
+  header {
+    flex-direction: column !important;
+    gap: clamp(12px, 3vw, 16px) !important;
+  }
+  
+  /* Navigation responsive */
+  nav {
+    flex-wrap: wrap !important;
+    gap: clamp(8px, 2vw, 12px) !important;
+    width: 100% !important;
+  }
+  
+  /* Padding adjustments */
+  div[style*="padding"],
+  section {
+    padding: clamp(12px, 4vw, 24px) !important;
+  }
+  
+  /* Gap adjustments */
+  div[style*="gap"] {
+    gap: clamp(12px, 3vw, 16px) !important;
+  }
+}
+
+/* Mobile screens (480px and below) */
+@media (max-width: 480px) {
+  html, body, #root {
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-size: clamp(12px, 2.5vw, 14px);
+  }
+  
+  /* Responsive grid classes */
+  .responsive-grid-main {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: clamp(10px, 3vw, 16px) !important;
+  }
+  
+  .responsive-grid-cards {
+    grid-template-columns: 1fr !important;
+    gap: clamp(10px, 2vw, 12px) !important;
+  }
+  
+  /* Headings scale down */
+  h1 {
+    font-size: clamp(20px, 5vw, 28px) !important;
+  }
+  
+  h2 {
+    font-size: clamp(16px, 4vw, 22px) !important;
+  }
+  
+  h3 {
+    font-size: clamp(14px, 3.5vw, 18px) !important;
+  }
+  
+  p {
+    font-size: clamp(11px, 2.5vw, 14px) !important;
+  }
+  
+  /* Section padding */
+  section {
+    padding: clamp(10px, 3vw, 16px) !important;
+    border-radius: clamp(16px, 4vw, 24px) !important;
+  }
+  
+  /* Form elements full width and stacked */
+  input[type="text"],
+  input[type="file"],
+  textarea,
+  select,
+  button {
+    width: 100% !important;
+    padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px) !important;
+    font-size: clamp(11px, 2.5vw, 13px) !important;
+    min-height: 40px !important;
+    margin-bottom: clamp(8px, 2vw, 12px) !important;
+  }
+  
+  button:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  /* Images responsive */
+  img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 60vh !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  
+  /* Flexbox responsive */
+  div[style*="display: flex"] {
+    flex-direction: column !important;
+    gap: clamp(10px, 2vw, 12px) !important;
+  }
+  
+  /* Grid adjustments */
+  div[style*="display: grid"] {
+    gap: clamp(10px, 2vw, 12px) !important;
+  }
+  
+  /* Reduce padding everywhere */
+  div[style*="padding"] {
+    padding: clamp(10px, 3vw, 16px) !important;
+  }
+  
+  /* Cards and containers */
+  div[style*="borderRadius"] {
+    border-radius: clamp(12px, 3vw, 20px) !important;
+  }
+  
+  /* Spotlight card height */
+  div[style*="height"] {
+    max-height: clamp(240px, 60vw, 400px);
+  }
+}
+
+/* Extra small screens (320px) */
+@media (max-width: 360px) {
+  html, body, #root {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  div[style*="padding"] {
+    padding: clamp(8px, 2.5vw, 12px) !important;
+  }
+  
+  section {
+    padding: clamp(8px, 2.5vw, 12px) !important;
+  }
+  
+  input, button, textarea, select {
+    font-size: clamp(10px, 2vw, 12px) !important;
+    padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px) !important;
+  }
+  
+  h1 {
+    font-size: clamp(16px, 4vw, 24px) !important;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  section {
+    padding: clamp(8px, 2vw, 12px) !important;
+  }
+  
+  img {
+    max-height: 45vh !important;
+  }
+  
+  div[style*="minHeight"] {
+    min-height: auto !important;
+  }
+}
