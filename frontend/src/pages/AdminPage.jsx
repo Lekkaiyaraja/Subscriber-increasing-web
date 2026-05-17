@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
+import { API } from '../config.js';
 import { socket } from '../socket.js';
 import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 import ApprovedUserShowcase from '../components/ApprovedUserShowcase.jsx';
