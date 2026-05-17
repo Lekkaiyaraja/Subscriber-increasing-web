@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API } from '../config.js';
+import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 
 function BigPlayerCard({ player, onVote, teamColor }) {
   const [isVoting, setIsVoting] = useState(false);
@@ -32,11 +32,9 @@ function BigPlayerCard({ player, onVote, teamColor }) {
     >
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <img
-          src={player.photo ? `${API}${player.photo}` : 'https://via.placeholder.com/200x240?text=Player'}
+          src={buildImageUrl(player.photo)}
           alt={player.name}
-          onError={(event) => {
-            event.currentTarget.src = 'https://via.placeholder.com/200x240?text=Player';
-          }}
+          onError={handleImageError}
           style={{
             width: '100%',
             height: 'clamp(200px, 35vw, 240px)',

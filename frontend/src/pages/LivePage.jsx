@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { socket } from '../socket.js';
 import { API } from '../config.js';
+import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 import BigPlayerCard from '../components/BigPlayerCard.jsx';
 import ScoreBoard from '../components/ScoreBoard.jsx';
 import RunControls from '../components/RunControls.jsx';
@@ -68,16 +69,7 @@ function LivePage() {
       .slice(0, 8);
   };
 
-  const PLACEHOLDER_FAN_IMAGE = 'https://placehold.co/880x620?text=Fan+Spotlight';
-
-  const buildFanPhotoUrl = (photo) => {
-    if (!photo) return PLACEHOLDER_FAN_IMAGE;
-    if (photo.startsWith('http://') || photo.startsWith('https://')) {
-      return photo;
-    }
-    const normalized = photo.startsWith('/') ? photo : `/${photo}`;
-    return API ? `${API}${normalized}` : normalized;
-  };
+  const buildFanPhotoUrl = (photo) => buildImageUrl(photo);
 
   const applyApprovedUpload = (approvedUpload) => {
     if (!approvedUpload || !approvedUpload._id || !(approvedUpload.status === 'approved' || approvedUpload.approved)) {
@@ -413,10 +405,7 @@ function LivePage() {
                     <img
                       src={buildFanPhotoUrl(mainSpotlightFan.photo)}
                       alt={mainSpotlightFan.name || 'Featured subscriber'}
-                      onError={(event) => {
-                        event.currentTarget.onerror = null;
-                        event.currentTarget.src = PLACEHOLDER_FAN_IMAGE;
-                      }}
+                      onError={handleImageError}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
                     />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.64) 100%)' }} />
@@ -561,10 +550,7 @@ only approved subscribers make it here!        </p>
             <img
               src={buildFanPhotoUrl(mainSpotlightFan.photo)}
               alt={mainSpotlightFan.name || 'Featured subscriber'}
-              onError={(event) => {
-                event.currentTarget.onerror = null;
-                event.currentTarget.src = PLACEHOLDER_FAN_IMAGE;
-              }}
+              onError={handleImageError}
               style={{
                 width: '100%',
                 height: '100%',

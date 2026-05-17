@@ -1,14 +1,5 @@
 import { useMemo } from 'react';
-import { API } from '../config.js';
-
-const PLACEHOLDER_IMAGE = 'https://placehold.co/120x120?text=Fan';
-
-const buildFanPhotoUrl = (photo) => {
-  if (!photo) return PLACEHOLDER_IMAGE;
-  if (photo.startsWith('http://') || photo.startsWith('https://')) return photo;
-  const normalized = photo.startsWith('/') ? photo : `/${photo}`;
-  return API ? `${API}${normalized}` : normalized;
-};
+import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 
 function ApprovedUserShowcase({ approvedUsers = [], recentUsers = [], currentIndex = 0, onThumbnailClick = () => {} }) {
   const carouselItems = useMemo(() => {
@@ -68,11 +59,9 @@ function ApprovedUserShowcase({ approvedUsers = [], recentUsers = [], currentInd
             >
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.38) 65%)' }} />
               <img
-                src={buildFanPhotoUrl(activeUser.photo)}
+                src={buildImageUrl(activeUser.photo)}
                 alt={activeUser.name || 'featured fan'}
-                onError={(event) => {
-                  event.currentTarget.src = PLACEHOLDER_IMAGE;
-                }}
+                onError={handleImageError}
                 style={{ 
                   width: '100%', 
                   height: '100%', 
@@ -138,12 +127,9 @@ function ApprovedUserShowcase({ approvedUsers = [], recentUsers = [], currentInd
                     }}
                   >
                     <img
-                      src={buildFanPhotoUrl(user.photo)}
+                      src={buildImageUrl(user.photo)}
                       alt={user.name || 'approved fan'}
-                      onError={(event) => {
-                        event.currentTarget.onerror = null;
-                        event.currentTarget.src = PLACEHOLDER_IMAGE;
-                      }}
+                      onError={handleImageError}
                       style={{ 
                         width: '100%', 
                         height: '100%', 

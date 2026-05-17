@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { socket } from '../socket.js';
-import { API } from '../config.js';
+import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 import ApprovedUserShowcase from '../components/ApprovedUserShowcase.jsx';
 import ApprovedUserOverlay from '../components/ApprovedUserOverlay.jsx';
 import ScoreBoard from '../components/ScoreBoard.jsx';
@@ -51,12 +51,7 @@ function AdminPage() {
   const [currentSpotlightIndex, setCurrentSpotlightIndex] = useState(0);
   const previousSpotlightIds = useRef([]);
 
-  const buildPhotoUrl = (photo) => {
-    if (!photo) return 'https://placehold.co/160x160?text=Subscriber';
-    if (photo.startsWith('http://') || photo.startsWith('https://')) return photo;
-    const normalized = photo.startsWith('/') ? photo : `/${photo}`;
-    return API ? `${API}${normalized}` : normalized;
-  };
+  const buildPhotoUrl = (photo) => buildImageUrl(photo);
 
   const loadAdminState = async () => {
     try {
@@ -386,10 +381,7 @@ function AdminPage() {
                 <img
                   src={buildPhotoUrl(subscriber.photo)}
                   alt={subscriber.name || 'Subscriber photo'}
-                  onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src = 'https://placehold.co/160x160?text=Subscriber';
-                  }}
+                  onError={handleImageError}
                   style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 14, objectFit: 'cover' }}
                 />
                 <div>
@@ -698,7 +690,7 @@ function AdminPage() {
             {uploads.filter((u) => !u.approved).map((upload) => (
               <div key={upload._id} style={{ border: '1px solid #d8e2f1', borderRadius: 12, padding: 'clamp(12px, 2.5vw, 16px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <img src={`${API}${upload.photo}`} alt="preview" style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} />
+                  <img src={buildImageUrl(upload.photo)} alt="preview" onError={handleImageError} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} />
                   <div>
                     <p style={{ margin: 0, fontWeight: 700, fontSize: 'clamp(12px, 2.5vw, 14px)' }}>{upload.name || upload.playerId?.name || 'Fan Upload'}</p>
                     <p style={{ margin: '6px 0 0', color: '#556', fontSize: 'clamp(11px, 2.5vw, 13px)' }}>Pending review</p>

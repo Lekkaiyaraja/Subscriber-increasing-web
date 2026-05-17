@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { API } from '../config.js';
+import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 
 function ApprovedUserOverlay({ user, onClose }) {
   const [animate, setAnimate] = useState(true);
@@ -49,12 +49,9 @@ function ApprovedUserOverlay({ user, onClose }) {
           🎉
         </div>
         <img
-          src={`${API}${user.photo}`}
+          src={buildImageUrl(user.photo)}
           alt="approved user"
-          onError={(event) => {
-            event.currentTarget.src = 'https://via.placeholder.com/160x160?text=Fan';
-            console.warn('Failed to load image from:', event.currentTarget.src);
-          }}
+          onError={handleImageError}
           style={{
             width: 'clamp(120px, 30vw, 160px)',
             height: 'clamp(120px, 30vw, 160px)',
