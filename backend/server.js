@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-const path = require('path');
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -59,16 +58,13 @@ app.use(
 );
 app.use(express.json());
 
-// Serve static uploads with proper CORS headers
-app.use('/uploads', (req, res, next) => {
+// Legacy local upload paths are no longer served. Cloudinary secure URLs are used instead.
+app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
-}, express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '24h',
-  etag: false,
-}));
+});
 
 app.use('/api', (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {

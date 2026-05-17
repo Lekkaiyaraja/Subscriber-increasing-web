@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
+const { uploadImageBuffer } = require('../utils/cloudinaryUpload');
 const Team = require('../models/Team');
 const Player = require('../models/Player');
 const Match = require('../models/Match');
@@ -9,19 +9,8 @@ const UserUpload = require('../models/UserUpload');
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', 'uploads'));
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const safeName = file.originalname.replace(/\s+/g, '_');
-    cb(null, `${timestamp}-${safeName}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Only image uploads are allowed'));
@@ -85,7 +74,16 @@ router.post('/vote/:playerId', async (req, res) => {
 const createUploadItem = async (req, res) => {
   try {
     const { playerId, name, place, isSubscriber } = req.body;
-    const photoPath = req.file ? `/uploads/${req.file.filename}` : '';
+    let photoPath = '';
+
+    if (req.file && req.file.buffer) {
+      const uploadResult = await uploadImageBuffer(req.file.buffer, {
+        folder: 'fan-uploads',
+        public_id: `${Date.now()}-${req.file.originalname.replace(/\s+/g, '_')}`,
+        resource_type: 'image',
+      });
+      photoPath = uploadResult.secure_url || '';
+    }
 
     const uploadItem = await UserUpload.create({
       photo: photoPath,

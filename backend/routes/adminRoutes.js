@@ -1,7 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
+const { uploadImageBuffer } = require('../utils/cloudinaryUpload');
 const Team = require('../models/Team');
 const Player = require('../models/Player');
 const Match = require('../models/Match');
@@ -11,19 +10,8 @@ const Admin = require('../models/Admin');
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', 'uploads'));
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const safeName = file.originalname.replace(/\s+/g, '_');
-    cb(null, `${timestamp}-${safeName}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Only image uploads are allowed')); 
@@ -118,13 +106,20 @@ router.post('/create-match', async (req, res) => {
 router.post('/upload-player', upload.single('photo'), async (req, res) => {
   try {
     const { name, teamName } = req.body;
-    if (!name || !teamName || !req.file) {
+    if (!name || !teamName || !req.file || !req.file.buffer) {
       return res.status(400).json({ message: 'Name, team, and photo are required' });
     }
+
+    const uploadResult = await uploadImageBuffer(req.file.buffer, {
+      folder: 'player-uploads',
+      public_id: `${Date.now()}-${req.file.originalname.replace(/\s+/g, '_')}`,
+      resource_type: 'image',
+    });
+
     const player = await Player.create({
       name,
       teamName,
-      photo: `/uploads/${req.file.filename}`,
+      photo: uploadResult.secure_url || '',
     });
     req.app.get('io').emit('playerCreated', player);
     res.json(player);
@@ -253,14 +248,7 @@ router.delete('/delete-upload/:id', async (req, res) => {
       return res.status(404).json({ message: 'Upload not found' });
     }
 
-    if (upload.photo) {
-      const normalized = upload.photo.startsWith('/') ? upload.photo.slice(1) : upload.photo;
-      const filePath = path.join(__dirname, '..', normalized);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-
+    // Old local file references are ignored safely; Cloudinary storage is authoritative.
     const match = await Match.findOne();
     if (match) {
       match.approvedUsers = match.approvedUsers.filter((item) => item.uploadId.toString() !== upload._id.toString());
