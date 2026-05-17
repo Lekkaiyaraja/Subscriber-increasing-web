@@ -34,6 +34,9 @@ function BigPlayerCard({ player, onVote, teamColor }) {
         <img
           src={player.photo ? `${API}${player.photo}` : 'https://via.placeholder.com/200x240?text=Player'}
           alt={player.name}
+          onError={(event) => {
+            event.currentTarget.src = 'https://via.placeholder.com/200x240?text=Player';
+          }}
           style={{
             width: '100%',
             height: 'clamp(200px, 35vw, 240px)',

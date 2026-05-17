@@ -51,6 +51,10 @@ function ApprovedUserOverlay({ user, onClose }) {
         <img
           src={`${API}${user.photo}`}
           alt="approved user"
+          onError={(event) => {
+            event.currentTarget.src = 'https://via.placeholder.com/160x160?text=Fan';
+            console.warn('Failed to load image from:', event.currentTarget.src);
+          }}
           style={{
             width: 'clamp(120px, 30vw, 160px)',
             height: 'clamp(120px, 30vw, 160px)',
