@@ -17,7 +17,8 @@ const server = http.createServer(app);
 
 const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || 'http://localhost:3000';
 const FRONTEND_URL_ALT = 'http://localhost:5173';
-const allowedOrigins = [FRONTEND_URL, FRONTEND_URL_ALT].filter(Boolean);
+const NETLIFY_PRODUCTION_URL = 'https://youtube-suppoterscom.netlify.app';
+const allowedOrigins = [FRONTEND_URL, FRONTEND_URL_ALT, NETLIFY_PRODUCTION_URL].filter(Boolean);
 
 const io = socketio(server, {
   cors: {
