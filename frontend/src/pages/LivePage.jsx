@@ -34,6 +34,7 @@ function LivePage() {
   const [overlayUser, setOverlayUser] = useState(null);
   const [recentApprovedUsers, setRecentApprovedUsers] = useState([]);
   const [todaySubscribers, setTodaySubscribers] = useState([]);
+  const [badges, setBadges] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getPlayerTeamName = (player) => player.teamName || player.teamId?.name || '';
@@ -70,6 +71,74 @@ function LivePage() {
   };
 
   const buildFanPhotoUrl = (photo) => buildImageUrl(photo);
+
+  const loadBadges = async () => {
+    try {
+      const { data } = await axios.get(`${API}/api/admin/badges`);
+      setBadges(Array.isArray(data) ? data : []);
+    } catch (error) {
+      // ignore badge load failures silently
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    loadBadges();
+    return () => { mounted = false; };
+  }, []);
+
+  const normalizeBadgeText = (text) => {
+    const raw = String(text || '').trim();
+    if (!raw) return '';
+    return raw
+      .replace(/[\\/]+/g, ' ')
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .split(' ')
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+  };
+
+  const getSupporterGroupCandidates = (fan) => {
+    const raw = fan ? String(fan.supporterGroup || fan.place || '').trim() : '';
+    if (!raw) return [];
+    const parts = raw
+      .split(/[\\/\(\)\[\],\|:\-]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    const normalizedRaw = normalizeBadgeText(raw);
+    const normalizedParts = parts.map(normalizeBadgeText).filter(Boolean);
+    return Array.from(new Set([normalizedRaw, ...normalizedParts]));
+  };
+
+  const normalizeSupporterGroup = (fan) => {
+    const candidates = getSupporterGroupCandidates(fan);
+    return candidates.length > 0 ? candidates[candidates.length - 1] : '';
+  };
+
+  const formatBadgeLabel = (text) => String(text || '').trim().toUpperCase();
+
+  const findBadgeForFan = (fan) => {
+    if (!fan) return null;
+    const explicitBadge = fan.badgeImage ? String(fan.badgeImage).trim() : '';
+    if (explicitBadge) {
+      return { badgeImageUrl: explicitBadge, groupName: fan.supporterGroup || normalizeSupporterGroup(fan) };
+    }
+
+    if (badges.length === 0) return null;
+    const candidates = getSupporterGroupCandidates(fan);
+
+    return badges.find((badge) => {
+      const normalizedBadgeName = normalizeBadgeText(badge.groupName || '');
+      if (!normalizedBadgeName) return false;
+      return candidates.some((candidate) =>
+        candidate === normalizedBadgeName
+        || candidate.includes(normalizedBadgeName)
+        || normalizedBadgeName.includes(candidate)
+      );
+    }) || null;
+  };
 
   const applyApprovedUpload = (approvedUpload) => {
     if (!approvedUpload || !approvedUpload._id || !(approvedUpload.status === 'approved' || approvedUpload.approved)) {
@@ -186,6 +255,7 @@ function LivePage() {
     socket.on('playerCreated', loadLiveData);
     socket.on('player-update', loadLiveData);
     socket.on('voteUpdated', loadLiveData);
+    socket.on('badgesUpdated', loadBadges);
 
     return () => {
       socket.off('matchUpdated');
@@ -206,6 +276,7 @@ function LivePage() {
       socket.off('playerCreated');
       socket.off('player-update');
       socket.off('voteUpdated');
+      socket.off('badgesUpdated');
     };
   }, []);
 
@@ -278,6 +349,8 @@ function LivePage() {
 
   const featuredFan = featuredFans[carouselIndex] || featuredFans[0] || null;
   const mainSpotlightFan = activeSpotlightFan || spotlightSubscribers[0] || null;
+  const featuredBadge = findBadgeForFan(mainSpotlightFan);
+  const featuredBadgeLabel = formatBadgeLabel(featuredBadge?.groupName || mainSpotlightFan?.supporterGroup || normalizeSupporterGroup(mainSpotlightFan));
 
   const selectedPlayersForTeam = (name, list) => {
     if (Array.isArray(list) && list.length > 0) {
@@ -348,8 +421,8 @@ function LivePage() {
       <div className="responsive-grid-main" style={{ maxWidth: 1480, margin: '0 auto', display: 'grid', gap: 24, overflowX: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(10px, 3vw, 14px)', alignItems: 'flex-end', overflowX: 'hidden' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 6vw, 42px)', letterSpacing: '-0.04em', color: '#102341' }}>IPL Live Score</h1>
-            <p style={{ margin: '12px 0 0', maxWidth: 760, color: '#4f5f7b', fontSize: 'clamp(12px, 3vw, 16px)' }}>Watch the match update instantly with fan uploads, player voting, and admin-powered team theme control.</p>
+            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 6vw, 42px)', letterSpacing: '-0.04em', color: '#102341' }}>TVK Community Live</h1>
+            <p style={{ margin: '12px 0 0', maxWidth: 760, color: '#4f5f7b', fontSize: 'clamp(12px, 3vw, 16px)' }}>Every supporter matters. Join crores of TVK supporters and get featured in the live community showcase.</p>
           </div>
           <div style={{ display: 'flex', gap: 'clamp(8px, 2vw, 10px)', flexWrap: 'wrap', minWidth: 0 }}>
             <span style={{ padding: '10px clamp(12px, 3vw, 16px)', borderRadius: 18, background: theme.teamAColor, color: '#fff', fontWeight: 700, fontSize: 'clamp(11px, 2.5vw, 14px)', whiteSpace: 'nowrap' }}>{teamAName}</span>
@@ -388,7 +461,7 @@ function LivePage() {
           {/* <section style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.88)', borderRadius: 32, border: '1px solid rgba(255,255,255,0.8)', padding: 'clamp(16px, 4vw, 28px)', boxShadow: '0 36px 90px rgba(15, 39, 95, 0.12)', display: 'grid', gap: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <p style={{ margin: 0, fontSize: 'clamp(12px, 2.5vw, 15px)', fontWeight: 700, color: '#102341' }}>Featured Subscriber Spotlight</p>
+                <p style={{ margin: 0, fontSize: 'clamp(12px, 2.5vw, 15px)', fontWeight: 700, color: '#102341' }}>TVK Subscriber Spotlight</p>
                 <h2 style={{ margin: '8px 0 0', fontSize: 'clamp(20px, 5vw, 28px)', color: '#102341' }}>Top 20 Subscribers</h2>
                 <p style={{ margin: '10px 0 0', color: '#556', maxWidth: 540, fontSize: 'clamp(12px, 2.5vw, 14px)' }}>Latest approved subscribers automatically appear in the spotlight strip and older entries are kept in the database.</p>
               </div>
@@ -439,9 +512,13 @@ function LivePage() {
     boxShadow:
       '0 30px 80px rgba(15, 39, 95, 0.10), inset 0 0 40px rgba(255,255,255,0.35)',
 
-    padding: 'clamp(16px, 4vw, 28px)',
+    padding: 'clamp(10px, 2.2vw, 16px)',
     display: 'grid',
-    gap: 24,
+    gap: 14,
+    width: 'min(100%, 900px)',
+    maxWidth: 900,
+    margin: '0 auto',
+    alignSelf: 'center',
 
     position: 'relative',
     overflow: 'hidden',
@@ -464,7 +541,7 @@ function LivePage() {
       position: 'relative',
       zIndex: 2,
       display: 'grid',
-      gap: 24,
+      gap: 16,
     }}
   >
     
@@ -474,7 +551,7 @@ function LivePage() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 12,
+        gap: 10,
         flexWrap: 'wrap',
       }}
     >
@@ -487,13 +564,14 @@ function LivePage() {
             color: '#102341',
           }}
         >
-          Featured Subscriber Spotlight
+          TVK Subscriber Spotlight
         </p>
 
         <h2
           style={{
-            margin: '8px 0 0',
-            fontSize: 'clamp(20px, 5vw, 28px)',
+            margin: '6px 0 0',
+            fontSize: 'clamp(16px, 4vw, 22px)',
+            lineHeight: 1.08,
             color: '#102341',
           }}
         >
@@ -502,10 +580,10 @@ function LivePage() {
 
         <p
           style={{
-            margin: '10px 0 0',
+            margin: '8px 0 0',
             color: '#556',
-            maxWidth: 540,
-            fontSize: 'clamp(12px, 2.5vw, 14px)',
+            maxWidth: 420,
+            fontSize: 'clamp(11px, 2.2vw, 13px)',
           }}
         >
 only approved subscribers make it here!        </p>
@@ -516,7 +594,7 @@ only approved subscribers make it here!        </p>
           display: 'inline-flex',
           alignItems: 'center',
           gap: 10,
-          padding: '10px 16px',
+          padding: '8px 14px',
           borderRadius: 20,
 
           background: 'rgba(255,255,255,0.55)', // white glass badge
@@ -534,57 +612,53 @@ only approved subscribers make it here!        </p>
     </div>
 
     {/* IMAGE SECTION (UNCHANGED LOGIC) */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 18 }}>
       <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
         {mainSpotlightFan ? (
-          <div
-            style={{
-              borderRadius: 28,
-              overflow: 'hidden',
-              position: 'relative',
-              width: '100%',
-              display: 'flex',
-              flex: 1,
-            }}
-          >
-            <img
-              src={buildFanPhotoUrl(mainSpotlightFan.photo)}
-              alt={mainSpotlightFan.name || 'Featured subscriber'}
-              onError={handleImageError}
+          <div style={{ display: 'grid', gap: 20, width: '100%' }}>
+            <div
               style={{
+                borderRadius: 28,
+                overflow: 'hidden',
+                position: 'relative',
                 width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                display: 'flex',
+                flex: 1,
+                minHeight: 320,
               }}
-            />
+            >
+              <img
+                src={buildFanPhotoUrl(mainSpotlightFan.photo)}
+                alt={mainSpotlightFan.name || 'Featured subscriber'}
+                onError={handleImageError}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
 
-            {/* LIGHT WHITE OVERLAY */}
+              {/* LIGHT WHITE OVERLAY */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background:
+                    'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.35) 100%)',
+                }}
+              />
+            </div>
+
             <div
               style={{
-                position: 'absolute',
-                inset: 0,
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.35) 100%)',
-              }}
-            />
-
-            {/* WHITE GLASS TEXT CARD */}
-            <div
-              style={{
-                position: 'absolute',
-                left: 24,
-                right: 24,
-                bottom: 24,
-                padding: 18,
+                padding: 16,
                 borderRadius: 24,
-
-                background: 'rgba(255,255,255,0.35)',
-                border: '1px solid rgba(255,255,255,0.6)',
-
-                backdropFilter: 'blur(18px)',
-                WebkitBackdropFilter: 'blur(18px)',
-
+                background: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(226,232,240,0.95)',
+                boxShadow: '0 14px 28px rgba(20,44,85,0.08)',
                 color: '#311041',
+                display: 'grid',
+                gap: 10,
               }}
             >
               <p
@@ -599,35 +673,74 @@ only approved subscribers make it here!        </p>
                 Subscriber Spotlight
               </p>
 
-              <h3 style={{ margin: '10px 0 0', fontSize: 30, lineHeight: 1.05 }}>
+              <h3 style={{ margin: '10px 0 0', fontSize: 26, lineHeight: 1.05 }}>
                 {mainSpotlightFan.name || 'Featured Subscriber'}
               </h3>
 
-              <p style={{ margin: '12px 0 0', color: '#415070', fontSize: 15 }}>
+              <p style={{ margin: '12px 0 0', color: '#415070', fontSize: 14 }}>
                 {mainSpotlightFan.place || 'Subscriber club'}
               </p>
 
+              {featuredBadge?.badgeImageUrl && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '8px 10px',
+                    borderRadius: 20,
+                    background: '#fff',
+                    border: '1px solid rgba(16, 35, 65, 0.12)',
+                    boxShadow: '0 12px 24px rgba(12, 30, 65, 0.06)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <img
+                    src={featuredBadge.badgeImageUrl}
+                    alt={featuredBadgeLabel || 'Supporter badge'}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      objectFit: 'contain',
+                      borderRadius: 18,
+                      background: '#fff',
+                      padding: 12,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                    {featuredBadgeLabel ? (
+                      <span style={{ color: '#102341', fontWeight: 700, fontSize: 'clamp(13px, 2.8vw, 15px)', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {featuredBadgeLabel}
+                      </span>
+                    ) : null}
+                    <span style={{ color: '#556', fontSize: 'clamp(12px, 2.4vw, 14px)', fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {mainSpotlightFan?.name || 'Featured Subscriber'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <span
-  style={{
-    display: 'inline-flex',
-    marginTop: 14,
-    alignItems: 'center',
-    gap: 8,
-    padding: '8px 14px',
-    borderRadius: 999,
-
-    background: 'red',
-    border: '1px solid rgba(255,255,255,0.9)',
-
-    color: '#102341',
-    fontWeight: 700,
-    fontSize: 12,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-  }}
->
-  SUBSCRIBER
-</span>
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 999,
+                  background: '#f8fafc',
+                  border: '1px solid rgba(226,232,240,0.95)',
+                  color: '#102341',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                SUBSCRIBER
+              </span>
             </div>
           </div>
         ) : (

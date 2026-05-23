@@ -344,4 +344,105 @@ router.post('/update-team-names', async (req, res) => {
   }
 });
 
+const fs = require('fs');
+const path = require('path');
+
+const BADGES_FILE = path.join(__dirname, '..', 'supporterBadges.json');
+
+const readBadges = () => {
+  try {
+    if (!fs.existsSync(BADGES_FILE)) return [];
+    const raw = fs.readFileSync(BADGES_FILE, 'utf8') || '[]';
+    return JSON.parse(raw);
+  } catch (err) {
+    return [];
+  }
+};
+
+const writeBadges = (arr) => {
+  fs.writeFileSync(BADGES_FILE, JSON.stringify(arr || [], null, 2), 'utf8');
+};
+
+// List badges
+router.get('/badges', (req, res) => {
+  try {
+    const badges = readBadges();
+    res.json(badges);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to read badges', error: error.message });
+  }
+});
+
+// Create a new badge (upload image + groupName)
+router.post('/badges', upload.single('badgeImage'), async (req, res) => {
+  try {
+    const { groupName } = req.body;
+    if (!groupName || !groupName.trim()) return res.status(400).json({ message: 'groupName is required' });
+    if (!req.file || !req.file.buffer) return res.status(400).json({ message: 'badgeImage is required' });
+
+    const uploadResult = await uploadImageBuffer(req.file.buffer, {
+      folder: 'supporter-badges',
+      public_id: `${Date.now()}-${groupName.replace(/\s+/g, '_')}`,
+      resource_type: 'image',
+    });
+
+    const badges = readBadges();
+    if (badges.find((b) => b.groupName.toLowerCase() === groupName.trim().toLowerCase())) {
+      return res.status(409).json({ message: 'Badge for this group already exists' });
+    }
+
+    const newBadge = { groupName: groupName.trim(), badgeImageUrl: uploadResult.secure_url || '' };
+    badges.push(newBadge);
+    writeBadges(badges);
+    req.app.get('io')?.emit('badgesUpdated', badges);
+    res.json(newBadge);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to create badge', error: error.message });
+  }
+});
+
+// Edit badge (change name and/or image)
+router.patch('/badges/:groupName', upload.single('badgeImage'), async (req, res) => {
+  try {
+    const { groupName } = req.params;
+    const { newGroupName } = req.body;
+    const badges = readBadges();
+    const index = badges.findIndex((b) => b.groupName.toLowerCase() === String(groupName || '').trim().toLowerCase());
+    if (index === -1) return res.status(404).json({ message: 'Badge not found' });
+
+    if (req.file && req.file.buffer) {
+      const uploadResult = await uploadImageBuffer(req.file.buffer, {
+        folder: 'supporter-badges',
+        public_id: `${Date.now()}-${(newGroupName || badges[index].groupName).replace(/\s+/g, '_')}`,
+        resource_type: 'image',
+      });
+      badges[index].badgeImageUrl = uploadResult.secure_url || badges[index].badgeImageUrl;
+    }
+
+    if (newGroupName && newGroupName.trim()) {
+      badges[index].groupName = newGroupName.trim();
+    }
+
+    writeBadges(badges);
+    req.app.get('io')?.emit('badgesUpdated', badges);
+    res.json(badges[index]);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update badge', error: error.message });
+  }
+});
+
+// Delete badge
+router.delete('/badges/:groupName', (req, res) => {
+  try {
+    const { groupName } = req.params;
+    const badges = readBadges();
+    const filtered = badges.filter((b) => b.groupName.toLowerCase() !== String(groupName || '').trim().toLowerCase());
+    writeBadges(filtered);
+    req.app.get('io')?.emit('badgesUpdated', filtered);
+    res.json({ message: 'Badge deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete badge', error: error.message });
+  }
+});
+
 module.exports = router;

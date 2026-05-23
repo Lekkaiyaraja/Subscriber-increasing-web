@@ -6,6 +6,7 @@ import { buildImageUrl, handleImageError } from '../utils/imageHelpers.js';
 import ApprovedUserShowcase from '../components/ApprovedUserShowcase.jsx';
 import ApprovedUserOverlay from '../components/ApprovedUserOverlay.jsx';
 import ScoreBoard from '../components/ScoreBoard.jsx';
+import SupporterGroupBadgesManager from '../components/SupporterGroupBadgesManager.jsx';
 
 function AdminPage() {
   const [username, setUsername] = useState('');
@@ -79,6 +80,7 @@ function AdminPage() {
       const topTwenty = [...topTwentyLatest].reverse();
 
       setSpotlightSubscribers(topTwenty);
+      setRecentApprovedUsers(topTwentyLatest.slice(0, 8));
       updateTodaySubscribers(uploadRes.data);
 
       setCurrentSpotlightIndex((prevIndex) => {
@@ -396,6 +398,10 @@ function AdminPage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section style={{ marginTop: 20 }}>
+        <SupporterGroupBadgesManager />
       </section>
 
       <section style={{ background: '#fff', borderRadius: 16, padding: 'clamp(16px, 4vw, 24px)', boxShadow: '0 20px 60px rgba(15, 39, 95, 0.08)' }}>

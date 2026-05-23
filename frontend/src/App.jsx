@@ -42,8 +42,8 @@ function App() {
       `}</style>
       <header style={{ marginBottom: 'clamp(16px, 4vw, 24px)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'clamp(12px, 3vw, 16px)', overflowX: 'hidden' }}>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <h1 style={{ margin: 0, color: '#0b3d91', fontSize: 'clamp(20px, 5vw, 32px)', wordBreak: 'break-word' }}>Live Fan Showcase</h1>
-          <p style={{ margin: '4px 0 0', color: '#556', fontSize: 'clamp(12px, 3vw, 16px)' }}>Real fans. Real time. Real spotlight.</p>
+          <h1 style={{ margin: 0, color: '#0b3d91', fontSize: 'clamp(20px, 5vw, 32px)', wordBreak: 'break-word' }}>TVK 17226209 Supporters</h1>
+          <p style={{ margin: '4px 0 0', color: '#556', fontSize: 'clamp(12px, 3vw, 16px)' }}>Together. Stronger. Bigger.</p>
         </div>
         <nav style={{ marginTop: 'clamp(8px, 2vw, 12px)', display: 'flex', gap: 'clamp(10px, 2vw, 12px)', flexWrap: 'wrap' }}>
           <NavLink to="/" style={navLinkStyle} end>

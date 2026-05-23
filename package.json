@@ -1,7 +1,7 @@
 {
   "name": "ipl-live",
   "version": "1.0.0",
-  "description": "IPL Live Score - Interactive fan engagement platform",
+  "description": "TVK Community Live - Interactive fan engagement platform",
   "private": true,
   "scripts": {
     "start": "cd backend && npm start",
